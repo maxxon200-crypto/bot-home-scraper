@@ -7,7 +7,7 @@ const online = location.protocol === 'http:' || location.protocol === 'https:';
 const storageKey = 'casa-watch-search-v2';
 const fields = ['budget','min-sqm','kind','bedrooms','bathrooms','max-ppm','energy','keywords','furnished','garden','exclude-auctions','price-drops'];
 let area=null, step=1, visibleLimit=12, map=null, markerLayer=null, shapeLayer=null, draftLayer=null;
-let mode=null, centre=null, points=[];
+let mode=null, points=[], pointer=null;
 const typeNames={apartment:'Apartment',penthouse:'Penthouse',house:'House / villa',rustic:'Rustic'};
 const euro = n => new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
 const known = n => Number.isFinite(n) && n>0;
@@ -46,7 +46,7 @@ function selection(){const f=readFilters(),base=data.results.filter(row=>basicMa
     return b.score-a.score||a.home.price-b.home.price;});
   return {base,rows,missing:base.filter(row=>!hasLocation(row.home)).length};
 }
-function areaName(){return !area?'All Milan':area.type==='circle'?(area.radius/1000).toFixed(2)+' km radius':'Custom boundary';}
+function areaName(){return !area?'All Milan':area.type==='circle'?(area.radius/1000).toFixed(2)+' km radius':'Your drawn area';}
 
 function makeCard(row){const h=row.home,card=element('article',undefined,'home-card');card.dataset.id=h.id;
   const top=element('div',undefined,'card-top');top.append(element('span',typeNames[h.property_type]||h.property_type,'home-type'));
@@ -88,53 +88,69 @@ function render(){const {base,rows,missing}=selection();
   const cards=$('cards');cards.replaceChildren(...rows.slice(0,visibleLimit).map(makeCard));
   $('empty').hidden=rows.length>0;$('show-more').hidden=visibleLimit>=rows.length;
   $('show-more').textContent='Show more · '+Math.min(visibleLimit,rows.length)+' of '+rows.length;
-  renderMarkers(rows);
+  renderMarkers(rows);localize();
 }
 function setStep(next){step=next;$('preferences').hidden=step===3;$('preferences-step').hidden=step!==1;$('area-step').hidden=step!==2;$('results').hidden=step!==3;$('edit-search').hidden=step!==3;
   $('heading').textContent=step===1?'Filters':step===2?'Choose your area':'Homes';
   $('workspace').className='workspace'+(step===2?' area-mode':step===3?' results-mode':'');
   for(let i=1;i<=3;i++){if(i===step)$('step-'+i).setAttribute('aria-current','step');else $('step-'+i).removeAttribute('aria-current');}
-  if(map)requestAnimationFrame(()=>map.invalidateSize());render();save();
+  if(map)requestAnimationFrame(()=>map.invalidateSize());render();save();localize();
 }
 function drawSavedArea(){if(!map)return;if(shapeLayer)map.removeLayer(shapeLayer);shapeLayer=null;if(!area)return;
   const style={color:'#185ac5',weight:2,fillColor:'#639efb',fillOpacity:.14};
   shapeLayer=area.type==='circle'?L.circle(area.center,{...style,radius:area.radius}):L.polygon(area.points,style);shapeLayer.addTo(map);
 }
-function cancelDraw(){mode=null;centre=null;points=[];if(draftLayer&&map)map.removeLayer(draftLayer);draftLayer=null;$('finish-polygon').hidden=true;
-  $('draw-circle').setAttribute('aria-pressed','false');$('draw-polygon').setAttribute('aria-pressed','false');
-  if(map){map.getContainer().style.cursor='';map.doubleClickZoom.enable();}$('map-instruction').textContent='Draw an area or search all Milan.';
+function cancelDraw(){if(map&&pointer!==null){const canvas=map.getContainer();if(canvas.hasPointerCapture(pointer))const completedPointer=pointer;pointer=null;canvas.releasePointerCapture(completedPointer);}mode=null;points=[];if(draftLayer&&map)map.removeLayer(draftLayer);draftLayer=null;
+  $('draw-area').setAttribute('aria-pressed','false');
+  if(map){map.getContainer().classList.remove('drawing');map.dragging.enable();map.doubleClickZoom.enable();map.touchZoom.enable();map.scrollWheelZoom.enable();}
+  $('map-instruction').textContent='Draw an area or search all Milan.';localize();
 }
-function beginDraw(type){if(!map)return;cancelDraw();mode=type;map.getContainer().style.cursor='crosshair';map.doubleClickZoom.disable();$(type==='circle'?'draw-circle':'draw-polygon').setAttribute('aria-pressed','true');
-  $('finish-polygon').hidden=type!=='polygon';$('map-instruction').textContent=type==='circle'?'Click the centre, then the edge. Escape cancels.':'Click boundary points, then Finish boundary. Escape cancels.';
+function beginDraw(){if(!map)return;if(mode){cancelDraw();return;}cancelDraw();mode='freehand';
+  map.getContainer().classList.add('drawing');map.dragging.disable();map.doubleClickZoom.disable();map.touchZoom.disable();map.scrollWheelZoom.disable();
+  $('draw-area').setAttribute('aria-pressed','true');$('map-instruction').textContent='Hold and drag on the map to draw your area. Release to finish.';localize();
 }
-function commitArea(candidate){if(!G.validArea(candidate)){$('map-instruction').textContent='Choose a valid area within Milan (circle: at least 20 metres).';return;}
-  area=candidate;cancelDraw();drawSavedArea();visibleLimit=12;render();save();
+function commitArea(candidate){if(!G.validArea(candidate)){$('map-instruction').textContent='Draw a larger area within Milan.';return;}
+  area=candidate;cancelDraw();drawSavedArea();visibleLimit=12;render();save();localize();
 }
 function clearArea(){area=null;cancelDraw();drawSavedArea();visibleLimit=12;render();save();}
-function finishPolygon(){if(points.length<3){$('map-instruction').textContent='Choose at least three boundary points.';return;}commitArea({type:'polygon',points:[...points]});}
 function initMap(){if(!online){$('map').hidden=true;document.querySelector('.map-toolbar').hidden=true;$('map-instruction').hidden=true;$('map-error').hidden=false;
   const link=element('a','Open live map →','primary');link.href='http://127.0.0.1:8765/';$('map-error').replaceChildren(link,element('p','If the app is stopped, run: python -m casa_watch --serve'));return;}
   if(!window.L){$('map-error').hidden=false;$('map-error').textContent='Map library unavailable. Filters still work.';return;}
   map=L.map('map',{preferCanvas:true}).setView([45.4642,9.19],12);markerLayer=L.layerGroup().addTo(map);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,minZoom:10,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).on('tileerror',()=>{$('map-error').hidden=false;$('map-error').textContent='Map tiles could not load. Check your connection.';}).addTo(map);
-  map.on('click',event=>{if(!mode)return;const p=[event.latlng.lat,event.latlng.lng];
-    if(mode==='circle'){if(!centre){centre=p;draftLayer=L.circle(centre,{radius:20,color:'#185ac5',fillOpacity:.1}).addTo(map);$('map-instruction').textContent='Now click the edge of the circle.';}else commitArea({type:'circle',center:centre,radius:G.distance(centre,p)});}
-    else{points.push(p);if(draftLayer)map.removeLayer(draftLayer);draftLayer=L.polyline(points,{color:'#185ac5'}).addTo(map);}
-  });
-  map.on('mousemove',event=>{if(mode==='circle'&&centre&&draftLayer)draftLayer.setRadius(G.distance(centre,[event.latlng.lat,event.latlng.lng]));});
+  // Capture a single continuous stroke. Releasing closes it automatically.
+  const canvas=map.getContainer();let lastPixel=null;
+  function addPoint(event){const pixel=map.mouseEventToContainerPoint(event);
+    if(lastPixel&&pixel.distanceTo(lastPixel)<4)return;
+    const latlng=map.containerPointToLatLng(pixel);points.push([latlng.lat,latlng.lng]);lastPixel=pixel;
+    if(!draftLayer)draftLayer=L.polyline(points,{color:'#185ac5',weight:3,interactive:false}).addTo(map);
+    else draftLayer.setLatLngs(points);
+  }
+  canvas.addEventListener('pointerdown',event=>{if(mode!=='freehand'||pointer!==null||event.button!==0||event.target.closest('.leaflet-control'))return;
+    event.preventDefault();event.stopPropagation();pointer=event.pointerId;points=[];lastPixel=null;canvas.setPointerCapture(pointer);addPoint(event);
+  },true);
+  canvas.addEventListener('pointermove',event=>{if(event.pointerId!==pointer)return;event.preventDefault();addPoint(event);},true);
+  canvas.addEventListener('pointerup',event=>{if(event.pointerId!==pointer)return;event.preventDefault();addPoint(event);const completedPointer=pointer;pointer=null;canvas.releasePointerCapture(completedPointer);
+    // Keep the saved shape small while retaining the user's outline.
+    const stride=Math.max(1,Math.ceil(points.length/190));const outline=points.filter((_,i)=>i%stride===0);
+    if(points.length<6||!G.validArea({type:'polygon',points:outline})){cancelDraw();$('map-instruction').textContent='Draw a larger area, then release.';localize();return;}
+    commitArea({type:'polygon',points:outline});
+  },true);
+  canvas.addEventListener('pointercancel',()=>{pointer=null;cancelDraw();},true);
   drawSavedArea();
 }
 async function refreshData(){if(!online)return;try{const response=await fetch('homes.json',{cache:'no-store'});if(!response.ok)return;const next=await response.json();if(next.status.checked_at!==data.status.checked_at){data=next;render();}}catch(_){} }
 async function refreshProgress(){if(!online)return;try{const response=await fetch('/api/status',{cache:'no-store'});if(!response.ok)return;const progress=await response.json();
   $('scan-state').textContent=progress.running?'Collecting · '+progress.collected+' homes':(data.status.collected_total||data.status.observed)+' collected';
-  $('collect').disabled=progress.running||progress.queued;
-}catch(_){$('scan-state').textContent='Collector disconnected';$('collect').disabled=true;} }
+  $('collect').disabled=progress.running||progress.queued;localize();
+}catch(_){$('scan-state').textContent='Collector disconnected';$('collect').disabled=true;localize();} }
 $('preferences').addEventListener('submit',event=>{event.preventDefault();setStep(2);});
 $('preferences').addEventListener('input',()=>{visibleLimit=12;render();save();});
 $('back').addEventListener('click',()=>setStep(1));$('show-results').addEventListener('click',()=>{cancelDraw();setStep(3);});$('edit-search').addEventListener('click',()=>setStep(1));
 $('sort').addEventListener('change',()=>{visibleLimit=12;render();save();});$('show-more').addEventListener('click',()=>{visibleLimit+=12;render();});
-$('draw-circle').addEventListener('click',()=>beginDraw('circle'));$('draw-polygon').addEventListener('click',()=>beginDraw('polygon'));$('finish-polygon').addEventListener('click',finishPolygon);
+$('draw-area').addEventListener('click',beginDraw);
 $('clear-area').addEventListener('click',clearArea);$('reset-area-empty').addEventListener('click',clearArea);document.addEventListener('keydown',event=>{if(event.key==='Escape')cancelDraw();});
-$('collect').addEventListener('click',async()=>{if(!online)return;$('collect').disabled=true;try{const response=await fetch('/api/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const result=await response.json();$('action-message').textContent=result.message;if(!response.ok)$('collect').disabled=false;}catch(_){$('action-message').textContent='Collector disconnected. Restart python -m casa_watch --serve.';}});
+$('collect').addEventListener('click',async()=>{if(!online)return;$('collect').disabled=true;try{const response=await fetch('/api/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const result=await response.json();$('action-message').textContent=response.ok?'Search queued':'Search unavailable';localize();if(!response.ok)$('collect').disabled=false;}catch(_){$('action-message').textContent='Collector disconnected. Restart python -m casa_watch --serve.';}});
+document.querySelectorAll('[data-language]').forEach(button=>button.addEventListener('click',()=>{setLanguage(button.dataset.language);render();}));
 restore();initMap();setStep(step);$('collect').hidden=!online;refreshProgress();
 if(online){setInterval(refreshData,10000);setInterval(refreshProgress,4000);}

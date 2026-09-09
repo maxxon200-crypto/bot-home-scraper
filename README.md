@@ -1,4 +1,4 @@
-# Casa Watch Italia
+# TracciaCasa
 
 A readable Python bot that monitors **homes for sale in Milan up to €10 million**, saves price history, and ranks promising listings. It reads real public Case24 listing pages. **No API key, AI subscription, paid scraping service, or cloud account.**
 
@@ -14,7 +14,7 @@ py -m venv .venv
 .\.venv\Scripts\python.exe -m casa_watch --serve
 ```
 
-Open **http://127.0.0.1:8765** in your browser. This is the running app with filter onboarding and a Milan map. Choose filters, click **Choose area**, draw a circle (centre, then edge) or a boundary (points, then Finish), and click **Show homes**. Filters and the selected area stay in this browser after a reload.
+Open **http://127.0.0.1:8765** in your browser. This is the running app with filter onboarding and a Milan map. Choose filters, click **Scegli la zona**, then **Disegna la tua zona**. Hold and drag to trace any shape; release to close it automatically, then click **Mostra case**. Italian is the default; the **IT / EN** toggle changes interface language and remembers your choice. Original advert text stays in its source language. Filters and the selected area stay in this browser after a reload.
 
 Opening `reports/index.html` directly still shows saved homes, but the live map needs the running local app. Its **Open live map** link takes you there. Unknown room/bathroom values are omitted, and descriptions are reduced to structured facts or an excerpt of at most 110 characters.
 
@@ -89,7 +89,7 @@ Empty lists disable phrase/energy restrictions. The initial configuration includ
 
 Unknown values fail an active filter that needs them. Homes with no asking price cannot be verified against your budget and are not shown as matches. Detail checks are queued, so strict filters can initially hide homes that will qualify later.
 
-Phrase filters match advert text, **not verified amenities**. For example, “senza ascensore” still contains “ascensore”. Pair required phrases with exclusions when useful and read the advert. The map supports circles and custom boundaries. Travel-time search is not implemented.
+Phrase filters match advert text, **not verified amenities**. For example, “senza ascensore” still contains “ascensore”. Pair required phrases with exclusions when useful and read the advert. The map supports freehand area selection with mouse or touch. Travel-time search is not implemented.
 
 Your first exercise: change only `min_sqm` from `0` to `60`, run one check, and see how the match count changes. That setting is just a minimum-size rule. You do not need to understand the whole bot to change it.
 

@@ -6,3 +6,5 @@
 - Change the generator/template when changing generated HTML, so regeneration cannot restore removed content.
 - Keep communication brief. Do not propose or add unsolicited features.
 - Retain the supplied static background image, Google Fonts Inter, and bold dark-blue headings.
+
+- Brand: TracciaCasa. Default UI language Italian with an IT/EN toggle. Use freehand drag-to-draw areas, never restore point-by-point boundary controls.
