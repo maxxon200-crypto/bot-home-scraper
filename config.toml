@@ -1,0 +1,40 @@
+# Milan homes FOR SALE. Euro amounts are total asking prices, not monthly rent.
+[search]
+city = "Milano"
+min_price = 0
+max_price = 10000000
+min_sqm = 0
+max_sqm = 10000
+min_bedrooms = 0
+min_bathrooms = 0
+# 0 means no limit. Unknown sizes cannot pass an active €/m² filter.
+max_price_per_sqm = 0
+property_types = ["apartment", "penthouse", "house", "rustic"]
+# These are exact phrases in the advert, not verified amenities or neighbourhoods.
+include_any = [] # e.g. ["isola", "porta romana"]
+require_all = [] # e.g. ["terrazzo"]
+exclude_any = [] # e.g. ["da ristrutturare"]
+energy_classes = [] # e.g. ["A4", "A3", "A2", "A1", "B"]
+furnished_only = false
+garden_only = false
+exclude_auctions = false
+exclude_partial_ownership = false
+only_price_drops = false
+
+[monitor]
+interval_seconds = 600
+request_delay_seconds = 2
+max_requests_per_day = 2000 # hard, persistent request ceiling; includes robots.txt
+catalog_pages_per_cycle = 2 # rotate through older pages; latest city page every cycle
+max_catalog_pages = 200 # per category; discovered pagination sets the real limit
+detail_pages_per_cycle = 12
+detail_refresh_hours = 24
+stale_after_hours = 72 # hide old observations; absence does NOT prove sold
+data_dir = "data"
+report_dir = "reports"
+
+[source]
+# Live HTML, no paid API. Change region/province/city together for another city.
+city_url = "https://www.case24.it/immobili/lombardia/milano/milano/"
+categories = ["appartamenti", "attici", "case_e_ville_indipendenti", "case_e_ville_a_schiera", "rustici"]
+
