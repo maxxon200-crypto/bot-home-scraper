@@ -14,6 +14,7 @@ class Home:
     sqm: float | None
     description: str = ""
     bedrooms: int | None = None
+    rooms: int | None = None
     bathrooms: int | None = None
     energy_class: str | None = None
     furnished: bool | None = None
@@ -24,6 +25,10 @@ class Home:
     detail_checked: str = ""
     previous_price: float | None = None
     price_changed_at: str = ""
+    address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    location_source: str | None = None
 
     @property
     def price_per_sqm(self):
@@ -57,4 +62,3 @@ def risk_flags(home):
     if home.price is None:
         flags.append("Price unavailable: cannot verify your budget")
     return flags
-

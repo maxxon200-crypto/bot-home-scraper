@@ -242,7 +242,7 @@ class MonitorTests(unittest.TestCase):
             write_report(rows, status, directory)
             html = (Path(directory) / "index.html").read_text(encoding="utf-8")
             self.assertNotIn("<script>alert(1)</script>", html)
-            self.assertIn("&lt;script&gt;", html)
+            self.assertIn("\\u003cscript>", html)
 
 
 if __name__ == "__main__":

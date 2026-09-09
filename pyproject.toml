@@ -17,4 +17,4 @@ casa-watch = "casa_watch.cli:main"
 include = ["casa_watch*"]
 
 [tool.setuptools.package-data]
-casa_watch = ["defaults.toml", "assets/*.png"]
+casa_watch = ["defaults.toml", "assets/*.png", "assets/*.json", "web/*", "web/vendor/*"]

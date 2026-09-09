@@ -11,17 +11,19 @@ git clone https://github.com/maxxon200-crypto/bot-home-scraper.git
 cd bot-home-scraper
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
-.\.venv\Scripts\python.exe -m casa_watch --once
+.\.venv\Scripts\python.exe -m casa_watch --serve
 ```
 
-Open **`reports/index.html`** in your browser. The first check collects a small batch of actual adverts; later checks grow the catalogue. `?` means a field is missing or its detail page has not been checked yet.
+Open **http://127.0.0.1:8765** in your browser. This is the running app with filter onboarding and a Milan map. Choose filters, click **Choose area**, draw a circle (centre, then edge) or a boundary (points, then Finish), and click **Show homes**. Filters and the selected area stay in this browser after a reload.
+
+Opening `reports/index.html` directly still shows saved homes, but the live map needs the running local app. Its **Open live map** link takes you there. Unknown room/bathroom values are omitted, and descriptions are reduced to structured facts or an excerpt of at most 110 characters.
 
 On Linux/macOS, replace the last three commands with:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -e .
-.venv/bin/python -m casa_watch --once
+.venv/bin/python -m casa_watch --serve
 ```
 
 ## Monitor for hours
@@ -36,7 +38,19 @@ python3 -m venv .venv
 
 Leave the computer awake, connected to the internet, and the terminal running. No background service is installed. Closing the terminal stops the bot. It saves progress automatically, so the same command resumes the catalogue scan and price history after a restart. Do not run two copies with the same data directory; a lock prevents that.
 
-The default interval is **10 minutes after each cycle finishes**. This is polling: the program checks for changes repeatedly. It is not an instant event feed. The report refreshes itself every two minutes while open; the monitor must still be running to produce new data. New matches and changed prices appear in the terminal and `data/monitor.log`. There are no external notifications or messages to agents.
+The default interval is **10 minutes after each cycle finishes**. This is polling: the program checks for changes repeatedly. The running app checks for new saved results every ten seconds without reloading the page or clearing your filters. New matches and price changes also appear in `data/monitor.log`.
+
+## Why did the first report only contain 50 homes?
+
+That was the collection after two small runs, not a 50-home limit. The scanner gradually visits the source catalogue. Click **Collect more homes** in the running app to request a bounded 40-page collection, or run:
+
+```powershell
+.\.venv\Scripts\python.exe -m casa_watch --once --catalog-pages 40 --detail-pages 35
+```
+
+Do not run this command alongside another collector using the same database. Small completed categories are skipped while larger categories still have unvisited pages. The UI displays 12 cards at a time with an explicit total and **Show more**; all matches remain searchable.
+
+Map coordinates come from complete advertised addresses matched locally to Milan's official civic-address index. There is no paid geocoding API. Unmatched or ambiguous addresses stay off the map and are excluded when an area is selected. These are inferred advert-address matches, not surveyed property locations. See [THIRD_PARTY.md](THIRD_PARTY.md) for provenance, licensing and limitations.
 
 ## Change filters
 
@@ -75,7 +89,7 @@ Empty lists disable phrase/energy restrictions. The initial configuration includ
 
 Unknown values fail an active filter that needs them. Homes with no asking price cannot be verified against your budget and are not shown as matches. Detail checks are queued, so strict filters can initially hide homes that will qualify later.
 
-Phrase filters match advert text, **not verified amenities**. For example, “senza ascensore” still contains “ascensore”. Pair required phrases with exclusions when useful and read the advert. Neighbourhood matching is textual; this version has no map, travel-time search, or geographic radius filter.
+Phrase filters match advert text, **not verified amenities**. For example, “senza ascensore” still contains “ascensore”. Pair required phrases with exclusions when useful and read the advert. The map supports circles and custom boundaries. Travel-time search is not implemented.
 
 Your first exercise: change only `min_sqm` from `0` to `60`, run one check, and see how the match count changes. That setting is just a minimum-size rule. You do not need to understand the whole bot to change it.
 
@@ -121,11 +135,14 @@ The flow is **fetch → parse → save → filter → rank → report**.
 | `casa_watch/ranking.py` | Filters and the visible scoring formula |
 | `casa_watch/monitor.py` | Repeat checks and produce local alerts |
 | `casa_watch/report.py` | Escaped HTML report and JSON export |
+| `casa_watch/web/` | Onboarding, concise cards, and map drawing |
+| `casa_watch/locations.py` | Offline matching to civic street addresses |
+| `casa_watch/server.py` | Local app and bounded collection requests |
 | `tests/test_core.py` | Small automated examples that check important behaviour |
 
 SQLite is a database stored in one local file, `data/homes.sqlite3`. Its `homes` table stores the latest observation per source ID; `prices` records each distinct observed price; `state` keeps scan positions, budgets, and notification history. No database server is needed.
 
-The exported `reports/homes.json` contains matched homes, rank explanations, and source status. Report status distinguishes the last attempt from the last completely successful cycle so an error cannot masquerade as a successful refresh.
+The exported `reports/homes.json` contains matched homes, rank explanations, and source status. Technical status remains in the export/logs rather than verbose page panels. Do not restore user-removed copy when changing the generator; see [AGENTS.md](AGENTS.md).
 
 ## Find a bug in 10 minutes
 
@@ -142,4 +159,3 @@ Do not commit your `data/`, `reports/`, personal configurations, or credentials.
 ## Contributing
 
 Use a small branch and a focused change. Add synthetic fixtures when fixing parser bugs, include a useful test, and explain how you checked it. See [CONTRIBUTING.md](CONTRIBUTING.md). MIT licensed.
-

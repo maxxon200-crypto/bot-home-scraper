@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Casa Watch · Milano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/vendor/leaflet.css"><link rel="stylesheet" href="assets/app.css">
+<script id="initial-data" type="application/json">__INITIAL_DATA__</script>
+<script src="assets/vendor/leaflet.js" defer></script><script src="assets/geometry.js" defer></script><script src="assets/app.js" defer></script>
+</head><body><main>
+<header class="topbar"><strong>casa<span>watch</span><small>MILANO</small></strong><div><span id="scan-state" aria-live="polite"></span><button id="collect" class="secondary">Collect more homes</button></div></header>
+<nav class="steps" aria-label="Search setup"><span id="step-1" aria-current="step">1 · Filters</span><span id="step-2">2 · Area</span><span id="step-3">3 · Homes</span></nav>
+<div class="heading"><h1 id="heading">Filters</h1><button id="edit-search" class="secondary" hidden>Edit search</button></div>
+<div class="workspace" id="workspace">
+<section class="sidebar" aria-label="Filters and homes">
+<form id="preferences" class="panel">
+<div id="preferences-step">
+<div class="fields">
+<label class="wide">Maximum price (€)<input id="budget" type="number" min="0" max="10000000" step="1" value="10000000" required></label>
+<label>Minimum size (m²)<input id="min-sqm" type="number" min="0" max="10000" value="0" required></label>
+<label>Home type<select id="kind"><option value="">All homes</option><option value="apartment">Apartment</option><option value="penthouse">Penthouse</option><option value="house">House / villa</option><option value="rustic">Rustic</option></select></label>
+<label>Bedrooms<select id="bedrooms"><option value="0">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
+<label>Bathrooms<select id="bathrooms"><option value="0">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option></select></label>
+</div>
+<details class="more-filters"><summary>More filters</summary><div class="fields">
+<label>Maximum €/m²<input id="max-ppm" type="number" min="0" value="0"><small>0 = no limit</small></label>
+<label>Energy class<select id="energy"><option value="">Any</option><option>A4</option><option>A3</option><option>A2</option><option>A1</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select></label>
+<label class="wide">Words in advert<input id="keywords" type="search" placeholder="e.g. terrazzo"></label>
+<label class="check wide"><input id="furnished" type="checkbox">Furnished</label><label class="check wide"><input id="garden" type="checkbox">Garden (shared or private)</label>
+<label class="check wide"><input id="exclude-auctions" type="checkbox">Exclude detected auctions</label><label class="check wide"><input id="price-drops" type="checkbox">Price drops only</label>
+</div></details>
+<p id="filter-count" class="muted" aria-live="polite"></p><button class="primary full" type="submit">Choose area →</button>
+</div>
+<div id="area-step" hidden><h2>Your area</h2><p>Draw a circle: click its centre, then its edge.</p><div class="selection-summary"><strong id="area-label">All Milan</strong><span id="area-count" aria-live="polite"></span></div><p id="area-missing" class="muted"></p><div class="button-row"><button id="back" type="button" class="secondary">Back</button><button id="show-results" type="button" class="primary">Show homes →</button></div></div>
+</form>
+<section id="results" hidden aria-label="Matching homes">
+<div class="result-tools"><strong id="match-count" aria-live="polite"></strong><label>Sort<select id="sort"><option value="score">Best signals</option><option value="price">Lowest price</option><option value="ppm">Lowest €/m²</option><option value="newest">Recently seen</option></select></label></div>
+<div id="active-filters" class="chips"></div><p id="location-note" class="muted"></p><div id="cards" class="cards"></div>
+<div id="empty" class="panel empty" hidden><h2>No matching homes</h2><p>Try a wider area or fewer filters.</p><button id="reset-area-empty" class="secondary">All Milan</button></div>
+<button id="show-more" class="secondary full" hidden>Show more</button>
+</section>
+</section>
+<section class="map-panel panel" aria-label="Milan map">
+<div class="map-heading"><h2>Milano</h2><span id="located-count" class="muted"></span></div>
+<div class="map-toolbar" role="group" aria-label="Draw area"><button id="draw-circle" class="secondary" type="button">◯ Circle</button><button id="draw-polygon" class="secondary" type="button">◇ Boundary</button><button id="finish-polygon" class="secondary" type="button" hidden>Finish boundary</button><button id="clear-area" class="text-button" type="button">Clear</button></div>
+<p id="map-instruction" class="muted" aria-live="polite">Draw an area or search all Milan.</p><div id="map" role="region" aria-label="Interactive Milan map"></div><div id="map-error" hidden></div>
+<footer class="map-footer"><span>Address matches from adverts</span><a href="https://dati.comune.milano.it/dataset/ds634-numeri-civici-coordinate" target="_blank" rel="noopener">Comune di Milano · CC BY 4.0</a></footer>
+</section></div>
+<p id="action-message" class="muted" role="status"></p>
+</main></body></html>

@@ -56,7 +56,7 @@ class Store:
             home.price_changed_at = old.price_changed_at
             if not detailed:
                 # A summary refresh must not erase the full description or structured details.
-                for field in ("bedrooms", "bathrooms", "energy_class", "furnished", "garden", "condition", "detail_checked"):
+                for field in ("bedrooms", "rooms", "bathrooms", "energy_class", "furnished", "garden", "condition", "detail_checked", "address", "latitude", "longitude", "location_source"):
                     setattr(home, field, getattr(old, field))
                 if old.detail_checked:
                     home.description = old.description
@@ -72,3 +72,7 @@ class Store:
             self.db.execute("INSERT OR REPLACE INTO homes VALUES (?, ?)", (home.id, json.dumps(asdict(home))))
         return "new" if not old else "price_change" if changed else "seen"
 
+    def update_location(self, home):
+        """Enrichment isn't a source observation: preserve all freshness/price timestamps."""
+        with self.db:
+            self.db.execute("UPDATE homes SET payload=? WHERE id=?", (json.dumps(asdict(home)), home.id))

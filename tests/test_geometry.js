@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');
+const g=require('../casa_watch/web/geometry.js');
+const centre=[45.4642,9.19],circle={type:'circle',center:centre,radius:1000};
+assert(g.inside(centre,circle));assert(!g.inside([45.52,9.25],circle));assert(!g.inside(null,circle));
+assert(!g.inside([null,null],circle));assert(g.inside(null,null));assert(g.validArea(circle));
+assert(!g.validArea({...circle,radius:0}));
+const polygon={type:'polygon',points:[[45.46,9.18],[45.46,9.2],[45.48,9.2],[45.48,9.18]]};
+assert(g.validArea(polygon));assert(g.inside([45.47,9.19],polygon));assert(g.inside([45.46,9.19],polygon));assert(!g.inside([45.49,9.19],polygon));
+assert(!g.validArea({type:'polygon',points:polygon.points.slice(0,2)}));
+console.log('Circle / boundary inclusion, edges, missing coordinates and invalid shapes: passed');

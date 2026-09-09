@@ -104,7 +104,7 @@ def parse_detail(html, home):
         city=facts.get("comune", home.city),
         price=italian_number(facts.get("prezzo", "")),
         sqm=italian_number(facts.get("superficie (mq)", "")),
-        bedrooms=count("camere"), bathrooms=count("bagni"),
+        bedrooms=count("camere"), rooms=count("locali"), bathrooms=count("bagni"),
         energy_class=facts.get("classe energetica") or None,
         condition=facts.get("stato immobile") or None,
         furnished=True if furnished in ("sì", "si") else False if furnished == "no" else None,
