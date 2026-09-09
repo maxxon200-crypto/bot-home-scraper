@@ -8,3 +8,5 @@
 - Retain the supplied static background image, Google Fonts Inter, and bold dark-blue headings.
 
 - Brand: TracciaCasa. Default UI language Italian with an IT/EN toggle. Use freehand drag-to-draw areas, never restore point-by-point boundary controls.
+
+- Use the supplied logo. No header divider or MILANO suffix. Header buttons blend into the background. No arrow on the choose-area button. Budget starts empty; search ceiling stays at 10 million euros.

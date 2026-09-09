@@ -18,13 +18,14 @@ function element(tag,text,cls){const node=document.createElement(tag);if(text!==
 function readFilters(){return Object.fromEntries(fields.map(id=>[id,$(id).type==='checkbox'?$(id).checked:$(id).value]));}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify({filters:readFilters(),area,step,sort:$('sort').value}));}catch(_){} }
 function restore(){try{const saved=JSON.parse(localStorage.getItem(storageKey));if(!saved)return;for(const id of fields){const value=saved.filters?.[id];if($(id).type==='checkbox')$(id).checked=value===true;else if(typeof value==='string')$(id).value=value;}
-  if(!$('preferences').checkValidity()){ $('budget').value=10000000;$('min-sqm').value=0;$('max-ppm').value=0; }
+  if(!$('preferences').checkValidity()){ $('budget').value='';$('min-sqm').value=0;$('max-ppm').value=0; }
+  if($('budget').value==='10000000')$('budget').value='';
   area=G.validArea(saved.area)?saved.area:null;step=[1,2,3].includes(saved.step)?saved.step:1;
   if(['score','price','ppm','newest'].includes(saved.sort))$('sort').value=saved.sort;
 }catch(_){} }
 
 function basicMatch(row,f){const h=row.home;
-  if(!Number.isFinite(h.price)||h.price>Number(f.budget)||h.price<0)return false;
+  if(!Number.isFinite(h.price)||h.price>Number(f.budget||10000000)||h.price<0)return false;
   if(Number(f['min-sqm'])>0&&(!known(h.sqm)||h.sqm<Number(f['min-sqm'])))return false;
   if(f.kind&&h.property_type!==f.kind)return false;
   if(Number(f.bedrooms)>0&&(!known(h.bedrooms)||h.bedrooms<Number(f.bedrooms)))return false;
@@ -83,7 +84,7 @@ function render(){const {base,rows,missing}=selection();
   $('area-missing').textContent=area&&missing?missing+' homes without a matched address excluded.':'';
   $('match-count').textContent=rows.length+' homes';$('located-count').textContent=rows.filter(r=>hasLocation(r.home)).length+' on map';
   $('location-note').textContent=area&&missing?missing+' homes have no matched location.':'';
-  const chips=$('active-filters');chips.replaceChildren(element('span','Up to '+euro(Number($('budget').value))),element('span',areaName()));
+  const chips=$('active-filters');chips.replaceChildren(element('span',$('budget').value?'Up to '+euro(Number($('budget').value)):'Any price'),element('span',areaName()));
   if(Number($('min-sqm').value)>0)chips.append(element('span',$('min-sqm').value+'+ m²'));
   const cards=$('cards');cards.replaceChildren(...rows.slice(0,visibleLimit).map(makeCard));
   $('empty').hidden=rows.length>0;$('show-more').hidden=visibleLimit>=rows.length;
@@ -100,7 +101,7 @@ function drawSavedArea(){if(!map)return;if(shapeLayer)map.removeLayer(shapeLayer
   const style={color:'#185ac5',weight:2,fillColor:'#639efb',fillOpacity:.14};
   shapeLayer=area.type==='circle'?L.circle(area.center,{...style,radius:area.radius}):L.polygon(area.points,style);shapeLayer.addTo(map);
 }
-function cancelDraw(){if(map&&pointer!==null){const canvas=map.getContainer();if(canvas.hasPointerCapture(pointer))const completedPointer=pointer;pointer=null;canvas.releasePointerCapture(completedPointer);}mode=null;points=[];if(draftLayer&&map)map.removeLayer(draftLayer);draftLayer=null;
+function cancelDraw(){if(map&&pointer!==null){const canvas=map.getContainer();const oldPointer=pointer;pointer=null;if(canvas.hasPointerCapture(oldPointer))canvas.releasePointerCapture(oldPointer);}mode=null;points=[];if(draftLayer&&map)map.removeLayer(draftLayer);draftLayer=null;
   $('draw-area').setAttribute('aria-pressed','false');
   if(map){map.getContainer().classList.remove('drawing');map.dragging.enable();map.doubleClickZoom.enable();map.touchZoom.enable();map.scrollWheelZoom.enable();}
   $('map-instruction').textContent='Draw an area or search all Milan.';localize();

@@ -7,7 +7,7 @@
 <script id="initial-data" type="application/json">__INITIAL_DATA__</script>
 <script src="assets/vendor/leaflet.js" defer></script><script src="assets/geometry.js" defer></script><script src="assets/i18n.js" defer></script><script src="assets/app.js" defer></script>
 </head><body><main>
-<header class="topbar"><strong>Traccia<span>Casa</span><small>MILANO</small></strong><div><div class="language-toggle" role="group" aria-label="Lingua / Language"><button type="button" data-language="it" aria-pressed="true">IT</button><button type="button" data-language="en" aria-pressed="false">EN</button></div><span id="scan-state" aria-live="polite"></span><button id="collect" class="secondary">Collect more homes</button></div></header>
+<header class="topbar"><div class="brand"><img src="assets/logo.png" alt="TracciaCasa" width="2146" height="733"></div><div><div class="language-toggle" role="group" aria-label="Lingua / Language"><button type="button" data-language="it" aria-pressed="true">IT</button><button type="button" data-language="en" aria-pressed="false">EN</button></div><span id="scan-state" aria-live="polite"></span><button id="collect" class="secondary">Collect more homes</button></div></header>
 <nav class="steps" aria-label="Search setup"><span id="step-1" aria-current="step">1 · Filters</span><span id="step-2">2 · Area</span><span id="step-3">3 · Homes</span></nav>
 <div class="heading"><h1 id="heading">Filters</h1><button id="edit-search" class="secondary" hidden>Edit search</button></div>
 <div class="workspace" id="workspace">
@@ -15,7 +15,7 @@
 <form id="preferences" class="panel">
 <div id="preferences-step">
 <div class="fields">
-<label class="wide">Maximum price (€)<input id="budget" type="number" min="0" max="10000000" step="1" value="10000000" required></label>
+<label class="wide">Maximum price (€)<input id="budget" type="number" min="0" max="10000000" step="1" value="" placeholder="Any price"></label>
 <label>Minimum size (m²)<input id="min-sqm" type="number" min="0" max="10000" value="0" required></label>
 <label>Home type<select id="kind"><option value="">All homes</option><option value="apartment">Apartment</option><option value="penthouse">Penthouse</option><option value="house">House / villa</option><option value="rustic">Rustic</option></select></label>
 <label>Bedrooms<select id="bedrooms"><option value="0">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
@@ -28,9 +28,9 @@
 <label class="check wide"><input id="furnished" type="checkbox">Furnished</label><label class="check wide"><input id="garden" type="checkbox">Garden (shared or private)</label>
 <label class="check wide"><input id="exclude-auctions" type="checkbox">Exclude detected auctions</label><label class="check wide"><input id="price-drops" type="checkbox">Price drops only</label>
 </div></details>
-<p id="filter-count" class="muted" aria-live="polite"></p><button class="primary full" type="submit">Choose area →</button>
+<p id="filter-count" class="muted" aria-live="polite"></p><button class="primary full" type="submit">Choose area</button>
 </div>
-<div id="area-step" hidden><h2>Your area</h2><p>Hold and drag on the map to draw your area. Release to finish.</p><div class="selection-summary"><strong id="area-label">All Milan</strong><span id="area-count" aria-live="polite"></span></div><p id="area-missing" class="muted"></p><div class="button-row"><button id="back" type="button" class="secondary">Back</button><button id="show-results" type="button" class="primary">Show homes →</button></div></div>
+<div id="area-step" hidden><h2>Your area</h2><p>Hold and drag on the map to draw your area. Release to finish.</p><div class="selection-summary"><strong id="area-label">All Milan</strong><span id="area-count" aria-live="polite"></span></div><p id="area-missing" class="muted"></p><div class="button-row"><button id="back" type="button" class="secondary">Back</button><button id="show-results" type="button" class="primary">Show homes</button></div></div>
 </form>
 <section id="results" hidden aria-label="Matching homes">
 <div class="result-tools"><strong id="match-count" aria-live="polite"></strong><label>Sort<select id="sort"><option value="score">Best signals</option><option value="price">Lowest price</option><option value="ppm">Lowest €/m²</option><option value="newest">Recently seen</option></select></label></div>

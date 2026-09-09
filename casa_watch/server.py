@@ -23,6 +23,10 @@ def start_server(directory, wake, port=8765):
             self.end_headers()
             self.wfile.write(body)
 
+        def end_headers(self):
+            self.send_header("Cache-Control", "no-store")
+            super().end_headers()
+
         def valid_host(self):
             return self.headers.get("Host") in (f"127.0.0.1:{port}", f"localhost:{port}")
 
