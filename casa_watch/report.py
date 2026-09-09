@@ -3,6 +3,7 @@ from dataclasses import asdict
 from html import escape
 import json
 from pathlib import Path
+import shutil
 
 
 def atomic_write(path, text):
@@ -18,6 +19,10 @@ def money(value):
 def write_report(rows, status, directory):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
+    # Copy the original background unchanged so the report also works as a local file.
+    assets = directory / "assets"
+    assets.mkdir(exist_ok=True)
+    shutil.copyfile(Path(__file__).with_name("assets") / "background.png", assets / "background.png")
     export = [{**row, "home": asdict(row["home"])} for row in rows]
     atomic_write(directory / "homes.json", json.dumps({"status": status, "results": export}, indent=2, ensure_ascii=False))
     cards = []
@@ -39,18 +44,21 @@ def write_report(rows, status, directory):
     html = """<!doctype html><html lang='en'><head><meta charset='utf-8'>
     <meta name='viewport' content='width=device-width,initial-scale=1'>
     <meta http-equiv='refresh' content='120'><title>Casa Watch · Milan homes</title>
+    <link rel='preconnect' href='https://fonts.googleapis.com'>
+    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+    <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap' rel='stylesheet'>
     <style>
-    *{box-sizing:border-box}body{margin:0;background:#f3f4ef;color:#183c32;font:16px/1.55 system-ui,sans-serif}
-    main{max-width:1120px;margin:auto;padding:40px 24px}header{border-bottom:1px solid #b7c9be;padding-bottom:25px}
-    .eyebrow{font-size:12px;letter-spacing:3px;font-weight:700}h1{font-size:clamp(32px,5vw,56px);line-height:1.1;margin:14px 0}
-    .intro{max-width:790px;color:#435f55}a{color:inherit}h2{font-size:22px;line-height:1.3}h2 a{text-decoration:none}
-    .toolbar{display:flex;gap:16px;flex-wrap:wrap;margin:25px 0}input,select{padding:10px;border:1px solid #a6bbb0;border-radius:6px;font:inherit;max-width:100%}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:url('assets/background.png') center center/cover no-repeat fixed;color:#18304f;font:16px/1.55 'Inter',sans-serif}
+    main{max-width:1120px;margin:auto;padding:40px 24px}header{border-bottom:1px solid #c5d6ea;padding-bottom:25px}
+    .eyebrow{font-size:12px;letter-spacing:3px;font-weight:700;color:#2458a6}h1{font-size:clamp(32px,5vw,56px);font-weight:800;color:#123b75;line-height:1.1;margin:14px 0}
+    .intro{max-width:790px;color:#445b77}a{color:inherit}h2{font-size:22px;line-height:1.3}h2 a{text-decoration:none}
+    .toolbar{display:flex;gap:16px;flex-wrap:wrap;margin:25px 0}input,select{padding:10px;border:1px solid #b5cbe3;border-radius:6px;font:inherit;color:inherit;max-width:100%}
     label{display:grid;gap:5px;font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:20px}
-    article{background:white;border:1px solid #d8e1d9;border-radius:12px;padding:24px}.card-top{display:flex;justify-content:space-between;gap:10px;font-size:12px}
-    .card-top b{background:#e8efaa;padding:2px 8px;border-radius:4px}.price{font-size:26px;font-weight:700}.price small{display:block;font-size:14px;font-weight:400}
+    article{background:white;border:1px solid #d3e0ef;border-radius:12px;padding:24px}.card-top{display:flex;justify-content:space-between;gap:10px;font-size:12px}
+    .card-top b{background:#e0edff;color:#174e98;padding:2px 8px;border-radius:4px}.price{font-size:26px;font-weight:700}.price small{display:block;font-size:14px;font-weight:400}
     li{font-size:14px}ul{padding-left:20px}.warning{background:#fff2d6;padding:8px;font-size:13px;border-radius:4px}
-    .description{color:#51615a;font-size:14px}footer{font-size:11px;color:#677970;border-top:1px solid #e3e9e3;padding-top:12px}
-    .status{background:#e5ece6;border-radius:8px;padding:16px;margin:20px 0;font-size:14px}[hidden]{display:none!important}
+    .description{color:#4c617c;font-size:14px}footer{font-size:11px;color:#607590;border-top:1px solid #e0e8f2;padding-top:12px}
+    .status{background:#edf4ff;border-radius:8px;padding:16px;margin:20px 0;font-size:14px}[hidden]{display:none!important}
     </style></head><body><main><header><div class='eyebrow'>CASA WATCH / ITALIA</div>
     <h1>Your next home, in view.</h1><p class='intro'>Homes for sale in Milano, up to €10 million. Real Case24 asking prices, collected locally. The signal ranks price comparisons and recorded reductions; it is not a valuation.</p>
     </header>"""
